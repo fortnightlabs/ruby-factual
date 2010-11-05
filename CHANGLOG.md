@@ -1,6 +1,11 @@
+## Version 0.0.8
+* added Row.new(@table, subject_key)
+* @table.input
+
 ## Version 0.0.7
 * fix api limitation
 * added @table.page(2, :size => 10)
+
 ## Version 0.0.6
 * replaced curl dependency with net/http to be more universal (jruby)
 * added debug mode

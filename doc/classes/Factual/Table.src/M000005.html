@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="../../.././rdoc-style.css" type="text/css" media="screen" />
 </head>
 <body class="standalone-code">
-  <pre><span class="ruby-comment cmt"># File lib/factual.rb, line 144</span>
+  <pre><span class="ruby-comment cmt"># File lib/factual.rb, line 147</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">each_row</span>
       <span class="ruby-identifier">resp</span> = <span class="ruby-ivar">@adapter</span>.<span class="ruby-identifier">read_table</span>(<span class="ruby-ivar">@table_key</span>, <span class="ruby-ivar">@filters</span>, <span class="ruby-ivar">@sorts</span>, <span class="ruby-ivar">@page_size</span>, <span class="ruby-ivar">@page</span>)
 
@@ -18,7 +18,8 @@
       <span class="ruby-identifier">rows</span> = <span class="ruby-identifier">resp</span>[<span class="ruby-value str">&quot;data&quot;</span>]
 
       <span class="ruby-identifier">rows</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">row_data</span><span class="ruby-operator">|</span>
-        <span class="ruby-identifier">row</span> = <span class="ruby-constant">Row</span>.<span class="ruby-identifier">new</span>(<span class="ruby-keyword kw">self</span>, <span class="ruby-identifier">row_data</span>) 
+        <span class="ruby-identifier">subject_key</span> = <span class="ruby-identifier">row_data</span>.<span class="ruby-identifier">shift</span>
+        <span class="ruby-identifier">row</span> = <span class="ruby-constant">Row</span>.<span class="ruby-identifier">new</span>(<span class="ruby-keyword kw">self</span>, <span class="ruby-identifier">subject_key</span>, <span class="ruby-identifier">row_data</span>) 
         <span class="ruby-keyword kw">yield</span>(<span class="ruby-identifier">row</span>) <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">block_given?</span>
       <span class="ruby-keyword kw">end</span>
     <span class="ruby-keyword kw">end</span></pre>

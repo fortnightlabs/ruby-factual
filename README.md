@@ -27,3 +27,11 @@ A block of code is worth a thousand words.
 >         puts "inputted"
 >       end
 >     end
+>     
+>     # add a row
+>     ret = table.input(:state => "Nebraska", :two_letter_abbrev => "NE")
+>     
+>     # get a row object from resp
+>     subject_key = ret["subjectKey"]
+>     row = Factual::Row.new(table, subject_key)
+>     puts row["state"].value

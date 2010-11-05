@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="../../.././rdoc-style.css" type="text/css" media="screen" />
 </head>
 <body class="standalone-code">
-  <pre><span class="ruby-comment cmt"># File lib/factual.rb, line 82</span>
+  <pre><span class="ruby-comment cmt"># File lib/factual.rb, line 85</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">page</span>(<span class="ruby-identifier">page_num</span>, <span class="ruby-identifier">page_size_hash</span>=<span class="ruby-keyword kw">nil</span>)
       <span class="ruby-ivar">@page_size</span> = <span class="ruby-identifier">page_size_hash</span>[<span class="ruby-identifier">:size</span>] <span class="ruby-operator">||</span> <span class="ruby-ivar">@page_size</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">page_size_hash</span>
       <span class="ruby-ivar">@page</span> = <span class="ruby-identifier">page_num</span>.<span class="ruby-identifier">to_i</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">page_num</span>.<span class="ruby-identifier">to_i</span> <span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>

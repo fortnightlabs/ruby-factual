@@ -98,10 +98,10 @@ href="Table.html#M000005">each_row</a>.
       <h3 class="section-bar">Methods</h3>
 
       <div class="name-list">
-      <a href="#M000006">add_row</a>&nbsp;&nbsp;
       <a href="#M000005">each_row</a>&nbsp;&nbsp;
       <a href="#M000002">filter</a>&nbsp;&nbsp;
       <a href="#M000004">find_one</a>&nbsp;&nbsp;
+      <a href="#M000006">input</a>&nbsp;&nbsp;
       <a href="#M000001">page</a>&nbsp;&nbsp;
       <a href="#M000003">sort</a>&nbsp;&nbsp;
       </div>
@@ -203,34 +203,6 @@ href="Table.html#M000005">each_row</a>.
     <div id="methods">
       <h3 class="section-bar">Public Instance methods</h3>
 
-      <div id="method-M000006" class="method-detail">
-        <a name="M000006"></a>
-
-        <div class="method-heading">
-          <a href="Table.src/M000006.html" target="Code" class="method-signature"
-            onclick="popupCode('Table.src/M000006.html');return false;">
-          <span class="method-name">add_row</span><span class="method-args">(*params)</span>
-          </a>
-        </div>
-      
-        <div class="method-description">
-          <p>
-Samples:
-</p>
-<pre>
-  api.get_table('g9R1u2').add_row('NE') # add row with single subject
-  api.get_table('g9R1u2').add_row('NE', :state =&gt; 'Nebraska') # add single subject with fact values
-  api.get_table('EZ21ij').add_row(:last_name =&gt; 'Newguy') # if the table use UUID as their subject, the subject fields are not required
-</pre>
-<p>
-Returns:
-</p>
-<pre>
-  a Factual::Row object
-</pre>
-        </div>
-      </div>
-
       <div id="method-M000005" class="method-detail">
         <a name="M000005"></a>
 
@@ -331,6 +303,49 @@ href="Table.html#M000004">find_one</a></tt>
 
 </li>
 </ul>
+        </div>
+      </div>
+
+      <div id="method-M000006" class="method-detail">
+        <a name="M000006"></a>
+
+        <div class="method-heading">
+          <a href="Table.src/M000006.html" target="Code" class="method-signature"
+            onclick="popupCode('Table.src/M000006.html');return false;">
+          <span class="method-name">input</span><span class="method-args">(values_hash, opts={})</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p>
+Suggest values for a row, it can be used to create a row, or edit an
+existing row
+</p>
+<p>
+Parameters:
+</p>
+<pre>
+ * +values_hash+
+ * values in hash, field_refs as keys
+ * +opts+
+ * &lt;tt&gt;opts[:source]&lt;/tt&gt; the source of an input, can be a URL or something else
+ * &lt;tt&gt;opts[:comments]&lt;/tt&gt; the comments of an input
+</pre>
+<p>
+Returns:
+</p>
+<pre>
+  { &quot;subjectKey&quot; =&gt; &lt;subject_key&gt;, &quot;exists&quot; =&gt; &lt;true|false&gt; }
+  subjectKey: a Factual::Row object can be initialized by a subjectKey, e.g. Factual::Row.new(@table, subject_key)
+  exists: if &quot;exists&quot; is true, it means an existing row is edited, otherwise, a new row added
+</pre>
+<p>
+Sample:
+</p>
+<pre>
+  table.input :two_letter_abbrev =&gt; 'NE', :state =&gt; 'Nebraska'
+  table.input({:two_letter_abbrev =&gt; 'NE', :state =&gt; 'Nebraska'}, {:source =&gt; 'http://website.com', :comments =&gt; 'cornhusker!'})
+</pre>
         </div>
       </div>
 
