@@ -6,6 +6,11 @@ class AdapterTest < Factual::TestCase # :nodoc:
     @adapter = Factual::Adapter.new(API_KEY, API_VERSION, API_DOMAIN, DEBUG_MODE)
   end
 
+  def test_read_row
+    row_data = @adapter.read_row(TABLE_KEY, SUBJECT_KEY)
+    assert_not_nil row_data
+  end
+
   def test_corret_request
     url = "/tables/#{TABLE_KEY}/schema.json"
 

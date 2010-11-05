@@ -1,12 +1,13 @@
 # A Ruby Lib for using Facutal API 
 #
-# For more information, visit http://github.com/factual/ruby-lib (TODO), 
+# For more information, visit http://github.com/factual/ruby-factual, 
 # and {Factual Developer Tools}[http://www.factual.com/devtools]
 #
 # Author:: Forrest Cao (mailto:forrest@factual.com)
 # Copyright:: Copyright (c) 2010 {Factual Inc}[http://www.factual.com].
-# License:: GPL
+# License:: MIT
 
+require 'rubygems'
 require 'net/http'
 require 'json'
 require 'uri'
@@ -15,26 +16,25 @@ module Factual
   # The start point of using Factual API
   class Api
 
-    # To initialize a Factual::Api, you will have to get an api_key from {Factual Developer Tools}[http://www.factual.com/developers/api_key]
+    # To initialize a Factual::Api, you will have to get an API Key from {Factual Developer Tools}[http://www.factual.com/developers/api_key]
     #
     # Params: opts as a hash
     # * <tt>opts[:api_key]</tt> required
     # * <tt>opts[:debug]</tt>   optional, default is false. If you set it as true, it will print the Factual Api Call URLs on the screen
-    # * <tt>opts[:version]</tt> optional, default value is 2, just do not change it
     # * <tt>opts[:domain]</tt>  optional, default value is www.factual.com (only configurable by Factual employees) 
     # 
     # Sample: 
     #   api = Factual::Api.new(:api_key => MY_API_KEY, :debug => true)
     def initialize(opts)
       @api_key = opts[:api_key]
-      @version = opts[:version] || 2
+      @version = 2
       @domain  = opts[:domain] || 'www.factual.com'
       @debug   = opts[:debug]
 
       @adapter = Adapter.new(@api_key, @version, @domain, @debug)
     end
 
-    # Get a Factual::Table object by inputting the table_key
+    # Get a Factual::Table object by table_key
     #
     # Sample: 
     #   api.get_table('g9R1u2')
@@ -63,9 +63,12 @@ module Factual
        self.send("#{attr}=", @schema[k]) 
      end
 
+     @fields_lookup = {}
      @fields.each do |f|
        fid = f['id']
-       f['field_ref'] = @schema["fieldRefs"][fid.to_s]
+       field_ref = @schema["fieldRefs"][fid.to_s]
+       f['field_ref'] = field_ref
+       @fields_lookup[field_ref] = f
      end
     end
 
@@ -148,23 +151,41 @@ module Factual
       rows = resp["data"]
 
       rows.each do |row_data|
-        row = Row.new(self, row_data) 
+        subject_key = row_data.shift
+        row = Row.new(self, subject_key, row_data) 
         yield(row) if block_given?
       end
     end
 
-    # Samples:
-    #   api.get_table('g9R1u2').add_row('NE') # add row with single subject
-    #   api.get_table('g9R1u2').add_row('NE', :state => 'Nebraska') # add single subject with fact values
-    #   api.get_table('EZ21ij').add_row(:last_name => 'Newguy') # if the table use UUID as their subject, the subject fields are not required
+    # Suggest values for a row, it can be used to create a row, or edit an existing row
+    #
+    # Parameters:
+    #  * +values_hash+ 
+    #  * values in hash, field_refs as keys
+    #  * +opts+ 
+    #  * <tt>opts[:source]</tt> the source of an input, can be a URL or something else
+    #  * <tt>opts[:comments]</tt> the comments of an input
     #
     # Returns:
-    #   a Factual::Row object
-    def add_row(*params)
-      fact_values = params.last.is_a?(Hash) ? params.pop : {}
-      subject_values = params
-      puts subject_values.inspect
-      puts fact_values.inspect
+    #   { "subjectKey" => <subject_key>, "exists" => <true|false> }
+    #   subjectKey: a Factual::Row object can be initialized by a subjectKey, e.g. Factual::Row.new(@table, subject_key)
+    #   exists: if "exists" is true, it means an existing row is edited, otherwise, a new row added
+    #
+    # Sample:
+    #   table.input :two_letter_abbrev => 'NE', :state => 'Nebraska'
+    #   table.input({:two_letter_abbrev => 'NE', :state => 'Nebraska'}, {:source => 'http://website.com', :comments => 'cornhusker!'})
+    def input(values_hash, opts={})
+      values = values_hash.collect do |field_ref, value|
+        field = @fields_lookup[field_ref.to_s]
+        raise Factual::ArgumentError.new("Wrong field ref.") unless field
+        
+        { :fieldId => field['id'], :value => value}
+      end
+
+      hash = opts.merge({ :values => values })
+
+      ret = @adapter.input(@table_key, hash)
+      return ret
     end
 
     private
@@ -181,13 +202,18 @@ module Factual
   class Row
     attr_reader :subject_key, :subject
 
-    def initialize(table, row_data) # :nodoc:
-      @subject_key = row_data[0]
+    def initialize(table, subject_key, row_data) # :nodoc:
+      @subject_key = subject_key
 
       @table       = table
       @fields      = @table.fields
       @table_key   = @table.key
       @adapter     = @table.adapter
+
+      if (row_data.nil? || row_data.empty?) && (subject_key)
+        row_data = @adapter.read_row(@table_key, subject_key) 
+        row_data.unshift
+      end
 
       @subject     = []
       @fields.each_with_index do |f, idx|
@@ -209,11 +235,6 @@ module Factual
     #   city_info['city_name']
     def [](field_ref)
       @facts_hash[field_ref]
-    end
-
-    # TODO
-    def input(values)
-      
     end
   end
 
@@ -239,10 +260,10 @@ module Factual
     # Parameters:
     #  * +value+ 
     #  * <tt>opts[:source]</tt> the source of an input, can be a URL or something else
-    #  * <tt>opts[:comment]</tt> the comment of an input
+    #  * <tt>opts[:comments]</tt> the comments of an input
     #
     # Sample:
-    #   fact.input('new value', :source => 'http://website.com', :comment => 'because it is new value.'
+    #   fact.input('new value', :source => 'http://website.com', :comments => 'because it is new value.'
     def input(value, opts={})
       return false if value.nil?
 
@@ -304,6 +325,13 @@ module Factual
       return resp["schema"]
     end
 
+    def read_row(table_key, subject_key)
+      url  = "/tables/#{table_key}/read.jsaml?subject_key=#{subject_key}"
+      resp = api_call(url)
+
+      return resp["response"]["data"][0]
+    end
+
     def read_table(table_key, filters=nil, sorts=nil, page_size=nil, page=nil)
       limit = page_size.to_i 
       limit = DEFAULT_LIMIT unless limit > 0
@@ -325,7 +353,7 @@ module Factual
     end
 
     def input(table_key, params)
-      query_string = params.to_a.collect{ |k,v| URI.escape(k.to_s) + '=' + URI.escape(v.to_s) }.join('&')
+      query_string = params.to_a.collect{ |k,v| URI.escape(k.to_s) + '=' + URI.escape(v.to_json) }.join('&')
 
       url  = "/tables/#{table_key}/input.js?" + query_string
       resp = api_call(url)
@@ -334,7 +362,7 @@ module Factual
     end
   end
 
-  # Exception class for Factual Api Errors  
-  class ApiError < Exception
-  end
+  # Exception classes for Factual Errors  
+  class ApiError < Exception; end
+  class ArgumentError < Exception; end
 end

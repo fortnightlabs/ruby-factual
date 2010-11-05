@@ -60,11 +60,12 @@ class TableTest < Factual::TestCase # :nodoc:
   end
 
   def test_adding_row
-    row = @table.add_row('NE', :state => 'Nebraska')
+    row = @table.input(:two_letter_abbrev => 'NE', :state => 'Nebraska')
   end
 
   def test_row
-    row = @table.find_one
+    row = Factual::Row.new(@table, SUBJECT_KEY)
+    assert_equal row["state"].value, "California"
   end
 
   def test_fact
