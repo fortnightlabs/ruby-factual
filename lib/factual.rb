@@ -131,7 +131,7 @@ module Factual
       resp = @adapter.read_table(@table_key, @filters, @sorts, 1)
       row_data = resp["data", 0]
 
-      if row_data
+      if row_data.is_a?(Array)
         subject_key = row_data.unshift
         return Row.new(self, subject_key, row_data)
       else
@@ -353,9 +353,8 @@ module Factual
       url  = "/tables/#{table_key}/read.jsaml?subject_key=#{subject_key}"
       resp = api_call(url)
 
-      row_data = resp["response", "data", 0]
+      row_data = resp["response", "data", 0] || []
       row_data.unshift # remove the subject_key
-
       return row_data
     end
 
