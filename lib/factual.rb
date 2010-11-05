@@ -129,10 +129,11 @@ module Factual
     # * <tt>table.filter(:state => 'CA').sort(:city => 1).find_one</tt>
     def find_one
       resp = @adapter.read_table(@table_key, @filters, @sorts, 1)
-      row_data = resp["data"].first
+      row_data = resp["data", 0]
 
       if row_data
-        return Row.new(self, row_data)
+        subject_key = row_data.unshift
+        return Row.new(self, subject_key, row_data)
       else
         return nil
       end
@@ -202,7 +203,7 @@ module Factual
   class Row
     attr_reader :subject_key, :subject
 
-    def initialize(table, subject_key, row_data) # :nodoc:
+    def initialize(table, subject_key, row_data=[]) # :nodoc:
       @subject_key = subject_key
 
       @table       = table
@@ -210,9 +211,8 @@ module Factual
       @table_key   = @table.key
       @adapter     = @table.adapter
 
-      if (row_data.nil? || row_data.empty?) && (subject_key)
+      if row_data.empty? && subject_key
         row_data = @adapter.read_row(@table_key, subject_key) 
-        row_data.unshift
       end
 
       @subject     = []
@@ -289,6 +289,29 @@ module Factual
   end
 
 
+  class Response
+    def initialize(obj)
+      @obj = obj
+    end
+
+    def [](*keys)
+      begin
+        ret = @obj
+        keys.each do |key|
+          ret = ret[key]
+        end
+
+        if ret.is_a?(Hash)
+          return Response.new(ret)
+        else
+          return ret
+        end
+      rescue Exception => e
+        Factual::ResponseError.new("Unexpected API response")
+      end
+    end
+  end
+
   class Adapter # :nodoc:
     CONNECT_TIMEOUT = 30
     DEFAULT_LIMIT   = 20
@@ -313,7 +336,8 @@ module Factual
         raise ApiError.new(e.to_s + " when getting " + api_url)
       end
 
-      resp = JSON.parse(json)
+      obj  = JSON.parse(json)
+      resp = Factual::Response.new(obj)
       raise ApiError.new(resp["error"]) if resp["status"] == "error"
       return resp
     end
@@ -329,7 +353,10 @@ module Factual
       url  = "/tables/#{table_key}/read.jsaml?subject_key=#{subject_key}"
       resp = api_call(url)
 
-      return resp["response"]["data"][0]
+      row_data = resp["response", "data", 0]
+      row_data.unshift # remove the subject_key
+
+      return row_data
     end
 
     def read_table(table_key, filters=nil, sorts=nil, page_size=nil, page=nil)
@@ -363,6 +390,7 @@ module Factual
   end
 
   # Exception classes for Factual Errors  
-  class ApiError < Exception; end
-  class ArgumentError < Exception; end
+  class ApiError < StandardError; end
+  class ArgumentError < StandardError; end
+  class ResponseError < StandardError; end
 end
