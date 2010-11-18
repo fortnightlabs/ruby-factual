@@ -1,3 +1,7 @@
+## Version 0.1
+* code polished 
+* moved to github.com/factual/ruby-factual
+
 ## Version 0.0.8
 * added Row.new(@table, subject_key)
 * @table.input

@@ -2,16 +2,16 @@
 
 Gem::Specification.new do |s|
   s.name = %q{ruby-factual}
-  s.version = "0.0.8"
+  s.version = "0.1"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 1.2") if s.respond_to? :required_rubygems_version=
   s.authors = ["Forrest Cao"]
-  s.date = %q{2010-10-20}
-  s.description = %q{}
+  s.date = %q{2010-11-17}
+  s.description = %q{Ruby gem to access Factual API}
   s.email = %q{forrest@factual.com}
   s.extra_rdoc_files = ["README.md"]
   s.files = ["README.md", "lib/factual.rb"]
-  s.homepage = %q{http://github.com/forrestc/ruby-factual}
+  s.homepage = %q{http://github.com/Factual/ruby-factual}
   s.rdoc_options = ["--line-numbers", "--inline-source", "--title", "ruby-factual", "--main", "README.md"]
   s.require_paths = ["lib"]
   s.rubygems_version = %q{1.3.7}
