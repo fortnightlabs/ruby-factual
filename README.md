@@ -5,7 +5,7 @@ A block of code is worth a thousand words.
 >     gem 'ruby-factual'
 >     require 'factual'
 >     
->     api = Factual::Api.new(:api_key => "<YOUR_FACTUAL_API_KEY>", :version => 2)
+>     api = Factual::Api.new(:api_key => "<YOUR_FACTUAL_API_KEY>")
 >     
 >     # get table and its metadata
 >     # table metadata: name, description, rating, source, creator, created_at,

@@ -152,7 +152,7 @@ module Factual
       rows = resp["data"]
 
       rows.each do |row_data|
-        subject_key = row_data.shift
+        subject_key = row_data.unshift
         row = Row.new(self, subject_key, row_data) 
         yield(row) if block_given?
       end

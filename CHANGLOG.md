@@ -1,3 +1,7 @@
+## Version 0.1.1
+* fixed bug in each_row
+* updated doc, removed version
+
 ## Version 0.1
 * code polished 
 * moved to github.com/factual/ruby-factual
