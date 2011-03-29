@@ -10,7 +10,7 @@
 require 'rubygems'
 require 'net/http'
 require 'json'
-require 'uri'
+require 'cgi'
 
 module Factual
   # The start point of using Factual API
@@ -379,7 +379,7 @@ module Factual
     end
 
     def input(table_key, params)
-      query_string = params.to_a.collect{ |k,v| URI.escape(k.to_s) + '=' + URI.escape(v.to_json) }.join('&')
+      query_string = params.to_a.collect{ |k,v| CGI.escape(k.to_s) + '=' + CGI.escape(v.to_json) }.join('&')
 
       url  = "/tables/#{table_key}/input.js?" + query_string
       resp = api_call(url)
