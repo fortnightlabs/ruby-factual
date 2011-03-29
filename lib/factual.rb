@@ -41,6 +41,11 @@ module Factual
     def get_table(table_key)
       Table.new(table_key, @adapter)
     end
+
+    # Get the token of a {shadow account}[http://wiki.developer.factual.com/f/shadow_input.png], it is a partner-only feature.
+    def get_token(unique_id)
+      return @adapter.get_token(unique_id)
+    end
   end
 
   # This class holds the metadata of a Factual table. The filter and sort methods are to filter and/or sort
@@ -187,6 +192,25 @@ module Factual
 
       ret = @adapter.input(@table_key, hash)
       return ret
+    end
+
+    # Suggest values for a row with a token, it is similar to input, but merely for shadow accounts input, it is a parter-only feature.
+    #
+    # Parameters:
+    #  * +token+ 
+    #  * +values_hash+ 
+    #  * +opts+ 
+    #
+    # Returns:
+    #   { "subjectKey" => <subject_key>, "exists" => <true|false> }
+    #   subjectKey: a Factual::Row object can be initialized by a subjectKey, e.g. Factual::Row.new(@table, subject_key)
+    #   exists: if "exists" is true, it means an existing row is edited, otherwise, a new row added
+    #
+    # Sample:
+    #   table.input "8kTXTBWBpNFLybFiDmApS9pnQyw2YkM4qImH2XpbC6AG1ixkZFCKKbx2Jk0cGl8Z", :two_letter_abbrev => 'NE', :state => 'Nebraska'
+    #   table.input("8kTXTBWBpNFLybFiDmApS9pnQyw2YkM4qImH2XpbC6AG1ixkZFCKKbx2Jk0cGl8Z", {:two_letter_abbrev => 'NE', :state => 'Nebraska'}, {:source => 'http://website.com', :comments => 'cornhusker!'})
+    def input_with_token(token, values_hash, opts={})
+      return input(values_hash, opts.merge({ :token => token }))
     end
 
     private
@@ -378,10 +402,19 @@ module Factual
       return resp["response"]
     end
 
+    def get_token(unique_id)
+      url  = "/sessions/get_token?uniqueId=#{unique_id}"
+      resp = api_call(url)
+
+      return resp["string"]
+    end
+
     def input(table_key, params)
+      token = params.delete(:token)
       query_string = params.to_a.collect{ |k,v| CGI.escape(k.to_s) + '=' + CGI.escape(v.to_json) }.join('&')
 
       url  = "/tables/#{table_key}/input.js?" + query_string
+      url += "&token=" + token if token
       resp = api_call(url)
 
       return resp['response']

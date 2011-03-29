@@ -1,3 +1,7 @@
+## Version 0.1.2
+* added shadow account support
+* fix bug for url escaping with char &
+
 ## Version 0.1.1
 * fixed bug in each_row
 * updated doc, removed version
