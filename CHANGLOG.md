@@ -1,3 +1,6 @@
+## Version 0.1.3
+* fix bug for filters escaping
+
 ## Version 0.1.2
 * added shadow account support
 * fix bug for url escaping with char &
