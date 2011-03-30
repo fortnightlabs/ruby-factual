@@ -388,8 +388,7 @@ module Factual
       offset = (page.to_i - 1) * limit
       offset = 0 unless offset > 0
 
-      # TODO clean it
-      filters_query = "&filters=" + filters.to_json if filters
+      filters_query = "&filters=" + CGI.escape(filters.to_json) if filters
 
       if sorts
         sorts = sorts[0] if sorts.length == 1
