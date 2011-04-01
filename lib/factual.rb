@@ -134,10 +134,10 @@ module Factual
     # * <tt>table.filter(:state => 'CA').sort(:city => 1).find_one</tt>
     def find_one
       resp = @adapter.read_table(@table_key, @filters, @sorts, 1)
-      row_data = resp["data", 0]
+      row_data = resp["data"].first
 
       if row_data.is_a?(Array)
-        subject_key = row_data.unshift
+        subject_key = row_data.shift
         return Row.new(self, subject_key, row_data)
       else
         return nil
@@ -157,7 +157,7 @@ module Factual
       rows = resp["data"]
 
       rows.each do |row_data|
-        subject_key = row_data.unshift
+        subject_key = row_data.shift
         row = Row.new(self, subject_key, row_data) 
         yield(row) if block_given?
       end
@@ -242,13 +242,13 @@ module Factual
       @subject     = []
       @fields.each_with_index do |f, idx|
         next unless f["isPrimary"]
-        @subject << row_data[idx+1]
+        @subject << row_data[idx]
       end
 
       @facts_hash  = {}
       @fields.each_with_index do |f, idx|
         next if f["isPrimary"]
-        @facts_hash[f["field_ref"]] = Fact.new(@table, @subject_key, f, row_data[idx+1])
+        @facts_hash[f["field_ref"]] = Fact.new(@table, @subject_key, f, row_data[idx])
       end
     end
 
@@ -292,9 +292,10 @@ module Factual
       return false if value.nil?
 
       hash = opts.merge({
-        :subjectKey => @subject_key,
-        :fieldId    => @field['id'],
-        :value      => value
+        :subjectKey => @subject_key.first,
+        :values     => [{
+          :fieldId    => @field['id'],
+          :value      => value }]
       })
 
       @adapter.input(@table_key, hash)
@@ -410,7 +411,10 @@ module Factual
 
     def input(table_key, params)
       token = params.delete(:token)
-      query_string = params.to_a.collect{ |k,v| CGI.escape(k.to_s) + '=' + CGI.escape(v.to_json) }.join('&')
+      query_string = params.to_a.collect do |k,v| 
+        v_string = (v.is_a?(Hash) || v.is_a?(Array)) ? v.to_json : v.to_s
+        CGI.escape(k.to_s) + '=' + CGI.escape(v_string) 
+      end.join('&')
 
       url  = "/tables/#{table_key}/input.js?" + query_string
       url += "&token=" + token if token
